@@ -1,6 +1,6 @@
 {
   "buildCommand": "NODE_ENV=production BASE_PATH=/ pnpm --filter @workspace/ahmed-portfolio run build",
-  "outputDirectory": "artifacts/ahmed-portfolio/dist/public",
+  "outputDirectory": "artifacts/ahmed-portfolio/dist",
   "installCommand": "pnpm install --no-frozen-lockfile",
   "framework": null,
   "rewrites": [
