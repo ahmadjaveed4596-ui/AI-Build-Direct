@@ -68,8 +68,31 @@ export default function ContactForm({
   const { isSubmitting } = form.formState;
 
   async function onSubmit(values: FormValues) {
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    console.log("Form submitted:", values);
+    const serviceLabel =
+      serviceOptions.find((o) => o.value === values.service)?.label ?? values.service;
+
+    const response = await fetch("https://formspree.io/f/xojrrowz", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        name: values.name,
+        email: values.email,
+        phone: values.phone || "Not provided",
+        service: serviceLabel,
+        preferredDate: values.preferredDate,
+        message: values.message,
+      }),
+    });
+
+    if (!response.ok) {
+      toast({
+        title: "Failed to send message",
+        description: "Something went wrong. Please try again or email directly.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSubmitted(true);
     toast({
       title: "Message sent!",
