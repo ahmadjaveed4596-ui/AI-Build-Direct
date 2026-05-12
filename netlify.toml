@@ -1,13 +1,9 @@
 [build]
-  # Run from the repo root so pnpm workspace is available
-  command = "pnpm install && pnpm --filter @workspace/ahmed-portfolio run build"
-  publish = "artifacts/ahmed-portfolio/dist/public"
+  command = "pnpm install && NODE_ENV=production BASE_PATH=/ pnpm --filter @workspace/ahmed-portfolio run build"
+  publish = "dist"
 
 [build.environment]
-  NODE_VERSION  = "20"
-  NODE_ENV      = "production"
-  BASE_PATH     = "/"
-  NETLIFY       = "true"
+  NODE_VERSION = "20"
 
 [[redirects]]
   from   = "/*"
