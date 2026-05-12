@@ -3,42 +3,34 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 
-const isNetlify = process.env.NETLIFY === "true";
 const isProduction = process.env.NODE_ENV === "production";
+const isReplit = Boolean(process.env.REPL_ID);
 
-// In Replit dev/workflow, PORT and BASE_PATH are required.
-// On Netlify (or any plain npm build), we use safe defaults.
+// PORT is required by Replit workflows; on CI/Vercel/Netlify we default to 5173
 const rawPort = process.env.PORT;
-const basePath = process.env.BASE_PATH ?? "/";
+const port = rawPort ? Number(rawPort) : 5173;
 
-let port = 5173;
-if (!isNetlify && rawPort) {
-  const parsed = Number(rawPort);
-  if (!Number.isNaN(parsed) && parsed > 0) port = parsed;
-} else if (!isNetlify && !rawPort && !isProduction) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
-}
+// BASE_PATH is injected by Replit; default to "/" everywhere else
+const basePath = process.env.BASE_PATH ?? "/";
 
 const plugins = [react(), tailwindcss()];
 
-if (!isProduction && !isNetlify) {
+// Replit-specific dev plugins — only load in Replit dev mode
+if (!isProduction && isReplit) {
   const runtimeErrorOverlay = await import(
     "@replit/vite-plugin-runtime-error-modal"
   );
   plugins.push(runtimeErrorOverlay.default());
 
-  if (process.env.REPL_ID !== undefined) {
-    const cartographer = await import("@replit/vite-plugin-cartographer");
-    plugins.push(
-      cartographer.cartographer({
-        root: path.resolve(import.meta.dirname, ".."),
-      }),
-    );
-    const devBanner = await import("@replit/vite-plugin-dev-banner");
-    plugins.push(devBanner.devBanner());
-  }
+  const cartographer = await import("@replit/vite-plugin-cartographer");
+  plugins.push(
+    cartographer.cartographer({
+      root: path.resolve(import.meta.dirname, ".."),
+    }),
+  );
+
+  const devBanner = await import("@replit/vite-plugin-dev-banner");
+  plugins.push(devBanner.devBanner());
 }
 
 export default defineConfig({
@@ -47,7 +39,12 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),
-      "@assets": path.resolve(import.meta.dirname, "..", "..", "attached_assets"),
+      "@assets": path.resolve(
+        import.meta.dirname,
+        "..",
+        "..",
+        "attached_assets",
+      ),
     },
     dedupe: ["react", "react-dom"],
   },
@@ -58,12 +55,10 @@ export default defineConfig({
   },
   server: {
     port,
-    strictPort: true,
+    strictPort: Boolean(rawPort),
     host: "0.0.0.0",
     allowedHosts: true,
-    fs: {
-      strict: true,
-    },
+    fs: { strict: true },
   },
   preview: {
     port,
